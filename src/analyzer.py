@@ -5,10 +5,12 @@ from collections import defaultdict
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+
 class SyslogAnalyzer:
     def __init__(self):
         self.events_by_severity = defaultdict(set)
         self.all_ips = set()
+        self.suspicious_ips = set()
 
     def categorize_message(self, message: str) -> str:
         """Определяет уровень опасности на основе ключевых слов"""
@@ -39,8 +41,14 @@ class SyslogAnalyzer:
                     msg = data['message']
                     severity = self.categorize_message(msg)
                     self.events_by_severity[severity].add(msg)
+
                     ips = re.findall(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', msg)
-                    self.all_ips.update(ips)
+
+                    if ips:
+                        self.all_ips.update(ips)
+                        msg_lower = msg.lower()
+                        if "failed" in msg_lower or "invalid" in msg_lower:
+                            self.suspicious_ips.update(ips)
 
                     yield data
 
@@ -50,13 +58,12 @@ class SyslogAnalyzer:
             "summary": {
                 severity: len(messages) for severity, messages in self.events_by_severity.items()
             },
-            "suspicious_ips": list(self.all_ips)
+            "all_unique_ips": list(self.all_ips),
+            "suspicious_ips": list(self.suspicious_ips)
         }
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(report, f, indent=4, ensure_ascii=False)
         logging.info(f"Отчет успешно сохранен в {output_path}")
-
-
 
 
 analyzer = SyslogAnalyzer()
@@ -65,7 +72,7 @@ count = 0
 for event in analyzer.process_file('data/syslog.log'):
     print(f"Успешно распарсено: {event['timestamp']} -> {event['process']}")
     count += 1
-    if count >= 5:
+    if count >= 1000:
         break
 
 analyzer.save_json_report("data/report.json")
