@@ -1,0 +1,10 @@
+site_name: My Docs
+
+theme: readthedocs
+
+plugins:
+  - mkdocstrings
+
+nav:
+  - Главная: index.md
+  - Архитектура проекта: architecture.md
