@@ -8,3 +8,8 @@
 
 ## Как запустить тесты:
 python -m pytest
+
+## Команды для пользования программы:
+python src/analyzer.py
+
+python src/generator.py

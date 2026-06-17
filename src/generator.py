@@ -4,7 +4,7 @@ from faker import Faker
 fake = Faker()
 
 
-def generate_syslog(filename, count=1000):
+def generate_syslog(filename, count=10000):
     processes = ["sshd", "sudo", "cron", "kernel"]
     messages = [
         "Failed password for root",

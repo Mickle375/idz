@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 class SyslogAnalyzer:
     def __init__(self):
-        self.events_by_severity = defaultdict(set)
+        self.events_by_severity = defaultdict(int)
         self.all_ips = set()
         self.suspicious_ips = set()
 
@@ -40,7 +40,7 @@ class SyslogAnalyzer:
                 if data:
                     msg = data['message']
                     severity = self.categorize_message(msg)
-                    self.events_by_severity[severity].add(msg)
+                    self.events_by_severity[severity] += 1
 
                     ips = re.findall(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', msg)
 
@@ -56,7 +56,7 @@ class SyslogAnalyzer:
         """Сохраняет результаты анализа в JSON файл"""
         report = {
             "summary": {
-                severity: len(messages) for severity, messages in self.events_by_severity.items()
+                severity: count for severity, count in self.events_by_severity.items()
             },
             "all_unique_ips": list(self.all_ips),
             "suspicious_ips": list(self.suspicious_ips)
@@ -72,7 +72,7 @@ count = 0
 for event in analyzer.process_file('data/syslog.log'):
     print(f"Успешно распарсено: {event['timestamp']} -> {event['process']}")
     count += 1
-    if count >= 1000:
+    if count >= 10000:
         break
 
 analyzer.save_json_report("data/report.json")
